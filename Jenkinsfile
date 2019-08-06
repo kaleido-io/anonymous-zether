@@ -8,13 +8,8 @@ node {
         default: tagPrefix = "br-${env.sha1}"; break
     }
 
-    def branch = "photic-0.0.1";
-    if ("${env.PHOTIC_BRANCH}" != "") {
-        branch = "photic-${env.PHOTIC_BRANCH}"
-    }
-
     try {
-        git url: 'https://github.com/kaleido-io/anonymous-zether.git', branch: "${branch}"
+        checkout scm
 
         stage("Pull $baseImageName") {
           baseImage = docker.image("$baseImageName")
