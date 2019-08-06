@@ -1,5 +1,5 @@
 {
-  "name": "@anonymous-zether/anonymous.js",
+  "name": "@photic/zclient",
   "version": "0.1.0",
   "description": "",
   "main": "./lib",

@@ -1,5 +1,6 @@
 node {
     def baseImageName = 'photic-docker-node'
+    def npmPackage = '@photic/zclient';
 
     def tagPrefix;
     switch ("${env.sha1}") {
