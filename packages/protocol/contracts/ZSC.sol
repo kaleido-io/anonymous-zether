@@ -1,11 +1,11 @@
 pragma solidity 0.5.4;
 
+import "openzeppelin-solidity/contracts/token/ERC20/ERC20Mintable.sol";
 import './ZetherVerifier.sol';
 import './BurnVerifier.sol';
-import './CashToken.sol';
 
 contract ZSC {
-    CashToken coin;
+    ERC20Mintable coin;
     ZetherVerifier zetherverifier;
     BurnVerifier burnverifier;
     uint256 public epochLength; // now in milliseconds.
@@ -24,7 +24,7 @@ contract ZSC {
     // arg is still necessary for transfers---not even so much to know when you received a transfer, as to know when you got rolled over.
 
     constructor(address _coin, address _zether, address _burn, uint256 _epochLength) public {
-        coin = CashToken(_coin);
+        coin = ERC20Mintable(_coin);
         zetherverifier = ZetherVerifier(_zether);
         burnverifier = BurnVerifier(_burn);
         epochLength = _epochLength;
