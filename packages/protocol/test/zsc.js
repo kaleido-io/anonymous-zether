@@ -1,10 +1,10 @@
-const CashToken = artifacts.require("CashToken");
+const ERC20Mintable = artifacts.require("ERC20Mintable");
 const ZSC = artifacts.require("ZSC");
 const utils = require('../../anonymous.js/src/utils/utils.js');
 
 contract("ZSC", async accounts => {
     it("should allow depositing / funding", async () => {
-        let cash = await CashToken.deployed();
+        let cash = await ERC20Mintable.deployed();
         let zsc = await ZSC.deployed();
         await cash.mint(accounts[0], 10000000);
         let balance = await cash.balanceOf.call(accounts[0]);
