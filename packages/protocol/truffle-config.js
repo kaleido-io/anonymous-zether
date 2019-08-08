@@ -5,14 +5,14 @@ module.exports = {
         develop: {
             host: "127.0.0.1",
             port: 7545,
-            gas: 470000000,
+            gas: 804247552,
             network_id: "*" // Match any network id
         },
         quorum1: {
             host: "127.0.0.1",
             port: 22000,
             gasPrice: 0,
-            gas: 470000000,
+            gas: 804247552,
             network_id: "*", // Match any network id
             type: "quorum"
         }

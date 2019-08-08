@@ -8,5 +8,5 @@ module.exports = async function(deployer) {
     await deployer.deploy(ERC20Mintable);
     await deployer.deploy(ZetherVerifier);
     await deployer.deploy(BurnVerifier);
-    deployer.deploy(ZSC, ERC20Mintable.address, ZetherVerifier.address, BurnVerifier.address, 3000);
+    await deployer.deploy(ZSC, ERC20Mintable.address, ZetherVerifier.address, BurnVerifier.address, 3000);
 };
