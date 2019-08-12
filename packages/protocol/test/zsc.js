@@ -145,14 +145,14 @@ contract("ZSC", async accounts => {
         )
         var recipientState = await zsc.simulateAccounts.call([zethAccountTo['y']], epoch);
         // preparing proof
-        var participants = [zethAccountFrom['y']].concat([zethAccountTo['y']]);
+        var participants = [zethAccountFrom['y'],zethAccountTo['y']];
         var transferValue = 500000;
         var randomness = bn128.randomScalar();
-        var L = [bn128.curve.g.mul(new BN(-transferValue)).add(bn128.unserialize(participants[0]).mul(randomness))].concat([bn128.curve.g.mul(new BN(transferValue)).add(bn128.unserialize(participants[1]).mul(randomness))]);
+        var L = [bn128.curve.g.mul(new BN(-transferValue)).add(bn128.unserialize(participants[0]).mul(randomness)), bn128.curve.g.mul(new BN(transferValue)).add(bn128.unserialize(participants[1]).mul(randomness))];
         var R = bn128.curve.g.mul(randomness);
-        var CLn = [bn128.serialize(bn128.unserialize(senderState[0][0]).add(L[0]))].concat([bn128.serialize(bn128.unserialize(recipientState[0][0]).add(L[1]))]);
-        var CRn = [bn128.serialize(bn128.unserialize(senderState[0][1]).add(R))].concat([bn128.serialize(bn128.unserialize(recipientState[0][1]).add(R))]);
-        var index = [0].concat([1]);
+        var CLn = [bn128.serialize(bn128.unserialize(senderState[0][0]).add(L[0])), bn128.serialize(bn128.unserialize(recipientState[0][0]).add(L[1]))];
+        var CRn = [bn128.serialize(bn128.unserialize(senderState[0][1]).add(R)), bn128.serialize(bn128.unserialize(recipientState[0][1]).add(R))];
+        var index = [0,1];
         L = L.map(bn128.serialize);
         R = bn128.serialize(R);
         
