@@ -1,7 +1,7 @@
 const bn128 = require('./bn128.js')
 const BN = require('bn.js')
 const { soliditySha3 } = require('web3-utils');
-
+const fs = require('fs')
 const utils = {};
 
 utils.determinePublicKey = (x) => {
@@ -54,6 +54,60 @@ utils.u = (epoch, x) => {
 
 utils.hash = (...args) => { // ags are serialized
     return new BN(soliditySha3(...args).slice(2), 16).toRed(bn128.q);
+};
+
+utils.match = (address1, address2) => {
+    return address1[0] == address2[0] && address1[1] == address2[1];
+};
+
+utils.shuffleAccountsWParityCheck = (accounts, sender, receiver) => {
+    var senderIndex = 0;
+    var receiverIndex = 1;
+    var m = accounts.length; 
+    while (m != 0) { // https://bost.ocks.org/mike/shuffle/
+        var i = Math.floor(Math.random() * m--);
+        var temp = accounts[i];
+        accounts[i] = accounts[m];
+        accounts[m] = temp;
+        if (utils.match(temp, sender))
+            senderIndex = m;
+        else if (utils.match(temp, receiver))
+            receiverIndex = m;
+    } // shuffle the accounts array
+    if (senderIndex % 2 == receiverIndex % 2) {
+        var temp = accounts[receiverIndex];
+        accounts[receiverIndex] = accounts[receiverIndex + (receiverIndex % 2 == 0 ? 1 : -1)];
+        accounts[receiverIndex + (receiverIndex % 2 == 0 ? 1 : -1)] = temp;
+        receiverIndex = receiverIndex + (receiverIndex % 2 == 0 ? 1 : -1);
+    } // make sure sender and receiver have opposite parity 
+    return {'y': accounts, 'index': [senderIndex, receiverIndex]}
+};
+
+utils.saveAccountToJson = (account, path) => {
+    //console.log(account['y']);
+    //console.log(account['x']);
+    var accountToSave = {
+        'privKey': account['x'].fromRed().toString(16)
+    };
+    var accString = JSON.stringify(accountToSave);
+    //console.log(accountToSave['privKey']);
+    fs.writeFileSync(path, accString);
+};
+
+utils.loadAccountFromJson = (path) => {
+    if (path === undefined) {
+        throw "please specify path to account file";
+    } 
+    var content = fs.readFileSync(path);
+    var accountStr = JSON.parse(content);
+    if (accountStr === undefined) {
+        throw "can't parse the file at the location";
+    }
+    //console.log(accountStr['privKey'])
+    var x = new BN(accountStr['privKey'], 16).toRed(bn128.q);
+    //console.log(x);
+    var y = utils.determinePublicKey(x);
+    return {'x': x, 'y': y};
 };
 
 module.exports = utils;

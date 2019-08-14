@@ -17,7 +17,7 @@ contract ZSC {
     mapping(bytes32 => address) ethAddrs;
     mapping(bytes32 => uint256) lastRollOver;
     bytes32[] nonceSet; // would be more natural to use a mapping, but they can't be deleted / reset!
-    uint256 lastGlobalUpdate = 0; // will be also used as a proxy for "current epoch", seeing as rollovers will be anticipated
+    uint256 public lastGlobalUpdate = 0; // will be also used as a proxy for "current epoch", seeing as rollovers will be anticipated
     // not implementing account locking for now...revisit
 
     event TransferOccurred(bytes32[2][] parties); // all parties will be notified, client can determine whether it was real or not.
@@ -61,9 +61,11 @@ contract ZSC {
             }
         }
     }
-
+    function setEpoch(uint256 epoch) external {
+        lastGlobalUpdate = epoch;
+    }
     function rollOver(bytes32 yHash) internal {
-        uint256 e = block.timestamp / 1000000 / epochLength; // can block.timestamp be "gamed"?
+        uint256 e = block.timestamp / epochLength; // can block.timestamp be "gamed"?
         // https://github.com/ethereum/wiki/blob/c02254611f218f43cbb07517ca8e5d00fd6d6d75/Block-Protocol-2.0.md
         // note that block.timestamp is technically in _nanoseconds_, although its trailing 3 digits are always 0 (so really micro)
         if (lastRollOver[yHash] < e) {
