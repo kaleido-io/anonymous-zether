@@ -50,6 +50,7 @@ class AnonProver {
 
         this.generateProof = (statement, witness, salt) => {
             var size = statement['y'].length();
+            console.log("size of statement:", size)
             if (params.size() < size) {
                 params.extend(size);
             } // one-off cost when a "new record" size is used.
@@ -119,8 +120,7 @@ class AnonProver {
 
             proof.f = a.map((a_i, i) => new FieldVector(a_i.add(b[i].times(proof['challenge'])).getVector().slice(1)));
             proof.zA = rB.redMul(proof.challenge).redAdd(rA);
-            proof.zC = rC.redMul(proof.challenge).redAdd(rD);
-
+            proof.zC = rC.redMul(proof.challenge).redAdd(rD);        
             return proof;
         };
     }
