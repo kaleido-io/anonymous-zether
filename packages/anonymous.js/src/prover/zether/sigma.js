@@ -1,4 +1,4 @@
-const { AbiCoder } = require('web3-eth-abi');
+const AbiCoder = require('web3-eth-abi');
 
 const { GeneratorParams, GeneratorVector, FieldVector } = require('../algebra.js');
 const bn128 = require('../../utils/bn128.js');
@@ -18,8 +18,6 @@ class SigmaProof {
 
 class SigmaProver {
     constructor() {
-        var abiCoder = new AbiCoder();
-
         this.generateProof = (statement, witness, salt) => {
             var y = statement['y'][0].getVector()[0];
             var yBar = statement['y'][1].getVector()[0];
@@ -39,7 +37,7 @@ class SigmaProver {
 
             var proof = new SigmaProof();
 
-            proof.challenge = utils.hash(abiCoder.encodeParameters([
+            proof.challenge = utils.hash(AbiCoder.encodeParameters([
                 'bytes32',
                 'bytes32[2][2][]',
                 'bytes32[2]',
