@@ -1,4 +1,4 @@
-const { AbiCoder } = require('web3-eth-abi');
+const AbiCoder = require('web3-eth-abi');
 const { soliditySha3 } = require('web3-utils');
 
 const { GeneratorParams, FieldVector } = require('../algebra.js');
@@ -18,8 +18,6 @@ class SigmaProof {
 
 class SigmaProver {
     constructor() {
-        var abiCoder = new AbiCoder();
-
         var g = utils.mapInto(soliditySha3("G")); // my version of "params". works, i guess.
 
         this.generateProof = (statement, witness, salt) => {
@@ -35,7 +33,7 @@ class SigmaProver {
 
             var proof = new SigmaProof();
 
-            proof.challenge = utils.hash(abiCoder.encodeParameters([
+            proof.challenge = utils.hash(AbiCoder.encodeParameters([
                 'bytes32',
                 'bytes32[2]',
                 'bytes32[2]',

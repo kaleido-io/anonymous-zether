@@ -1,4 +1,4 @@
-const { AbiCoder } = require('web3-eth-abi');
+const AbiCoder = require('web3-eth-abi');
 const BN = require('BN.js');
 
 const bn128 = require('../../utils/bn128.js');
@@ -28,8 +28,6 @@ class BurnProof {
 
 class BurnProver {
     constructor() {
-        var abiCoder = new AbiCoder();
-
         var params = new GeneratorParams();
         params.extend(32);
 
@@ -49,13 +47,13 @@ class BurnProver {
             var rho = bn128.randomScalar(); // already reduced
             proof.s = params.commit(sL, sR, rho);
 
-            var statementHash = utils.hash(abiCoder.encodeParameters(['uint256', 'uint256', 'bytes32[2]', 'bytes32[2]', 'bytes32[2]'], [statement['bTransfer'], statement['epoch'], statement['y'], statement['CLn'], statement['CRn']]));
+            var statementHash = utils.hash(AbiCoder.encodeParameters(['uint256', 'uint256', 'bytes32[2]', 'bytes32[2]', 'bytes32[2]'], [statement['bTransfer'], statement['epoch'], statement['y'], statement['CLn'], statement['CRn']]));
             statement['CLn'] = bn128.unserialize(statement['CLn']);
             statement['CRn'] = bn128.unserialize(statement['CRn']);
             statement['y'] = new GeneratorVector(statement['y'].map((point) => bn128.unserialize(point)));
             // leave bTransfer (and bDiff) as is for now
 
-            var y = utils.hash(abiCoder.encodeParameters(['bytes32', 'bytes32[2]', 'bytes32[2]'], [bn128.bytes(statementHash), bn128.serialize(proof.a), bn128.serialize(proof.s)]));
+            var y = utils.hash(AbiCoder.encodeParameters(['bytes32', 'bytes32[2]', 'bytes32[2]'], [bn128.bytes(statementHash), bn128.serialize(proof.a), bn128.serialize(proof.s)]));
             var ys = [new BN(1).toRed(bn128.q)];
             for (var i = 1; i < 32; i++) { // it would be nice to have a nifty functional way of doing this.
                 ys.push(ys[i - 1].redMul(y));
@@ -76,7 +74,7 @@ class BurnProver {
             var rPoly = new FieldVectorPolynomial(r0, r1);
             var tPolyCoefficients = lPoly.innerProduct(rPoly); // just an array of BN Reds... should be length 3
             var polyCommitment = new PolyCommitment(params, tPolyCoefficients);
-            var x = utils.hash(abiCoder.encodeParameters(['bytes32', 'bytes32[2]', 'bytes32[2]'], [bn128.bytes(z), ...polyCommitment.getCommitments().map(bn128.serialize)]));
+            var x = utils.hash(AbiCoder.encodeParameters(['bytes32', 'bytes32[2]', 'bytes32[2]'], [bn128.bytes(z), ...polyCommitment.getCommitments().map(bn128.serialize)]));
             var evalCommit = polyCommitment.evaluate(x);
             proof.tCommits = new GeneratorVector(polyCommitment.getCommitments()); // just 2 of them?
             proof.t = evalCommit.getX();
@@ -88,7 +86,7 @@ class BurnProver {
             var sigmaWitness = { 'x': witness['x'] }; // just a subset of the original witness
             proof.sigmaProof = sigmaProver.generateProof(sigmaStatement, sigmaWitness, x);
 
-            var uChallenge = utils.hash(abiCoder.encodeParameters(['bytes32', 'bytes32', 'bytes32', 'bytes32'], [bn128.bytes(proof.sigmaProof.challenge), bn128.bytes(proof.t), bn128.bytes(proof.tauX), bn128.bytes(proof.mu)]));
+            var uChallenge = utils.hash(AbiCoder.encodeParameters(['bytes32', 'bytes32', 'bytes32', 'bytes32'], [bn128.bytes(proof.sigmaProof.challenge), bn128.bytes(proof.t), bn128.bytes(proof.tauX), bn128.bytes(proof.mu)]));
             var u = params.getG().mul(uChallenge);
             var gs = params.getGs();
             var hPrimes = params.getHs().hadamard(ys.invert());
