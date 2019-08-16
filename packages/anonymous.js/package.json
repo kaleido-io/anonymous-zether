@@ -6,10 +6,14 @@
   "dependencies": {
     "bn.js": "^4.11.8",
     "elliptic": "^6.4.1",
-    "web3": "1.0.0-beta.55",
-    "web3-utils": "1.0.0-beta.55"
+    "web3": "1.0.0-beta.37",
+    "web3-utils": "1.0.0-beta.37"
   },
   "devDependencies": {
-    "eslint": "^5.16.0"
+    "chai": "^4.2.0",
+    "chai-as-promised": "^7.1.1",
+    "eslint": "^5.16.0",
+    "sinon": "^7.4.1",
+    "sinon-chai": "^3.3.0"
   }
 }

@@ -1,4 +1,4 @@
-const { AbiCoder } = require('web3-eth-abi');
+const AbiCoder = require('web3-eth-abi');
 const BN = require('BN.js');
 
 const { GeneratorParams, FieldVector, Convolver } = require('../algebra.js');
@@ -44,8 +44,6 @@ class AnonProof {
 
 class AnonProver {
     constructor() {
-        var abiCoder = new AbiCoder(64);
-
         var params = new GeneratorParams();
 
         this.generateProof = (statement, witness, salt) => {
@@ -87,7 +85,7 @@ class AnonProver {
             proof.parityG0 = statement['y'].commit(cycler[0].hadamard(cycler[1]));
             proof.parityG1 = statement['y'].commit(new FieldVector(Array.from({ length: size }).map((_, j) => cycler[(j + witness['index'][1]) % 2].getVector()[j])));
 
-            proof.challenge = utils.hash(abiCoder.encodeParameters([ // diverting with practice to just include this in the proof, but...
+            proof.challenge = utils.hash(AbiCoder.encodeParameters([ // diverting with practice to just include this in the proof, but...
                 'bytes32',
                 'bytes32[2][2][]',
                 'bytes32[2][2][]',
