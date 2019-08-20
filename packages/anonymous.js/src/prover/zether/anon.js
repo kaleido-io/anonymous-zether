@@ -5,6 +5,8 @@ const { GeneratorParams, FieldVector, Convolver } = require('../algebra.js');
 const bn128 = require('../../utils/bn128.js');
 const utils = require('../../utils/utils.js');
 
+
+
 class AnonProof {
     constructor() {
         this.serialize = () => {
@@ -81,7 +83,7 @@ class AnonProver {
             proof.LG = a.map((a_i, i) => convolver.convolution(a_i, statement['L']).add(statement['y'].shift(witness['index'][i]).extract(0).times(witness['rho'])));
             proof.yG = a.map((a_i, i) => convolver.convolution(a_i, statement['y']).add(statement['y'].shift(witness['index'][i]).extract(0).times(witness['sigma'])));
 
-            var cycler = a.map((a_i) => new FieldVector(Array(size / 2).fill(Array.from({ length: 2 }).map((_, j) => a_i.extract(j).sum())).flat())); // test this
+            var cycler = a.map((a_i) => new FieldVector([].concat.apply([], Array(size / 2).fill(Array.from({ length: 2 }).map((_, j) => a_i.extract(j).sum()))))); // test this
             proof.parityG0 = statement['y'].commit(cycler[0].hadamard(cycler[1]));
             proof.parityG1 = statement['y'].commit(new FieldVector(Array.from({ length: size }).map((_, j) => cycler[(j + witness['index'][1]) % 2].getVector()[j])));
 
