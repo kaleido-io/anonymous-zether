@@ -8,8 +8,8 @@ contract ZSC {
     ERC20Mintable coin;
     ZetherVerifier zetherverifier;
     BurnVerifier burnverifier;
-    uint256 public epochLength; // now in milliseconds.
-    uint256 public epochMultiplier; // additional multiplier to take care of different timestamp units in different protocols (ibft = 1, raft = 1000000)
+    uint256 public epochLength; // in seconds.
+    uint256 public epochMultiplier; // additional multiplier to take care of different timestamp units in different protocols (ibft = 1, raft = 1000000000)
     uint256 bTotal = 0; // could use erc20.balanceOf(this), but (even pure / view) calls cost gas during EVM execution
     uint256 constant MAX = 4294967295; // 2^32 - 1 // no sload for constants...!
     mapping(bytes32 => bytes32[2][2]) acc; // main account mapping
@@ -17,7 +17,7 @@ contract ZSC {
     mapping(bytes32 => address) ethAddrs;
     mapping(bytes32 => uint256) lastRollOver;
     bytes32[] nonceSet; // would be more natural to use a mapping, but they can't be deleted / reset!
-    uint256 lastGlobalUpdate = 0; // will be also used as a proxy for "current epoch", seeing as rollovers will be anticipated
+    uint256 public lastGlobalUpdate = 0; // will be also used as a proxy for "current epoch", seeing as rollovers will be anticipated
     // not implementing account locking for now...revisit
 
     event TransferOccurred(bytes32[2][] parties); // all parties will be notified, client can determine whether it was real or not.
