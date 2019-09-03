@@ -24,6 +24,7 @@ contract ZSC {
     // arg is still necessary for transfers---not even so much to know when you received a transfer, as to know when you got rolled over.
 
     constructor(address _coin, address _zether, address _burn, uint256 _epochLength, uint256 _epochMultiplier) public {
+        require((_epochMultiplier != 0), "_epochMultiplier can't be 0");
         coin = ERC20Mintable(_coin);
         zetherverifier = ZetherVerifier(_zether);
         burnverifier = BurnVerifier(_burn);
