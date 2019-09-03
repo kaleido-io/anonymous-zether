@@ -9,7 +9,7 @@ contract ZSC {
     ZetherVerifier zetherverifier;
     BurnVerifier burnverifier;
     uint256 public epochLength; // now in milliseconds.
-
+    uint256 public epochMultiplier; // additional multiplier to take care of different timestamp units in different protocols (ibft = 1, raft = 1000000)
     uint256 bTotal = 0; // could use erc20.balanceOf(this), but (even pure / view) calls cost gas during EVM execution
     uint256 constant MAX = 4294967295; // 2^32 - 1 // no sload for constants...!
     mapping(bytes32 => bytes32[2][2]) acc; // main account mapping
@@ -23,11 +23,12 @@ contract ZSC {
     event TransferOccurred(bytes32[2][] parties); // all parties will be notified, client can determine whether it was real or not.
     // arg is still necessary for transfers---not even so much to know when you received a transfer, as to know when you got rolled over.
 
-    constructor(address _coin, address _zether, address _burn, uint256 _epochLength) public {
+    constructor(address _coin, address _zether, address _burn, uint256 _epochLength, uint256 _epochMultiplier) public {
         coin = ERC20Mintable(_coin);
         zetherverifier = ZetherVerifier(_zether);
         burnverifier = BurnVerifier(_burn);
         epochLength = _epochLength;
+        epochMultiplier = _epochMultiplier;
     }
 
     function simulateAccounts(bytes32[2][] calldata y, uint256 epoch) view external returns (bytes32[2][2][] memory accounts) {
@@ -63,7 +64,7 @@ contract ZSC {
     }
 
     function rollOver(bytes32 yHash) internal {
-        uint256 e = block.timestamp / 1000000 / epochLength; // can block.timestamp be "gamed"?
+        uint256 e = block.timestamp / epochMultiplier / epochLength; // can block.timestamp be "gamed"?
         // https://github.com/ethereum/wiki/blob/c02254611f218f43cbb07517ca8e5d00fd6d6d75/Block-Protocol-2.0.md
         // note that block.timestamp is technically in _nanoseconds_, although its trailing 3 digits are always 0 (so really micro)
         if (lastRollOver[yHash] < e) {
