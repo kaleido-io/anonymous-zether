@@ -4,17 +4,19 @@
 
 This is a private payment system, an _anonymous_ extension of Bünz, Agrawal, Zamani and Boneh's [Zether protocol](https://crypto.stanford.edu/~buenz/papers/zether.pdf).
 
-The outlines of an anonymous approach are sketched in the authors' original manuscript. We develop an explicit proof protocol for this extension, described in the technical note [AnonZether.pdf](docs/AnonZether.pdf). We also provide a full implementation of the anonymous protocol (including a proof generator, verification contracts, and a client / front-end).
+The authors sketch an anonymous extension in their original manuscript. We develop an explicit proof protocol for this extension, described in the technical note [AnonZether.pdf](docs/AnonZether.pdf). We also fully implement this anonymous protocol (including verification contracts and a client / front-end with its own proof generator).
 
 Thanks go to Benedikt Bünz for discussions around this, as well as for the original Zether work. Also, Sergey Vasilyev's [range proof contracts](https://github.com/leanderdulac/BulletProofLib/blob/master/truffle/contracts/RangeProofVerifier.sol) served as a starting point for our [Zether verification contracts](packages/protocol/contracts).
 
 ## High-level overview
 
-Anonymous Zether is an private value-tracking system, in which encrypted account balances are stored in Ethereum smart contracts. Each Zether Smart Contract (ZSC) must, upon deployment, be "attached" to some already-deployed ERC20 contract. After deployment, users may then transfer their ERC20 balances into (_deposit_) or out of (_withdraw_) special Zether accounts residing within the contract itself. Having credited funds to their Zether accounts, users may privately send these funds to other Zether accounts, _confidentially_ (transferred amounts are private) and _anonymously_ (identities of transactors are private). The obvious properties of course also hold: only the owner of each account's secret key can spend its funds, and overdraws are impossible.
+Anonymous Zether is an private value-tracking system, in which an Ethereum smart contract maintains encrypted account balances. Each Zether Smart Contract (ZSC) must, upon deployment, "attach" to some already-deployed ERC-20 contract; once deployed, this contract establishes special "Zether" accounts into / out of which users may _deposit_ or _withdraw_ ERC-20 funds. Having credited funds to a Zether account, its owner may privately send these funds to other Zether accounts, _confidentially_ (transferred amounts are private) and _anonymously_ (identities of transactors are private). Only the owner of each account's secret key may spend its funds, and overdraws are impossible.
 
-As explained in the [original Zether paper](https://crypto.stanford.edu/~buenz/papers/zether.pdf), each account balance is encrypted under its own public key and stored in the ZSC as an (ElGamal) ciphertext. To send funds, Alice publishes an ordered list of Zether public keys, which contains herself and the recipient, among other arbitrarily chosen parties; Alice further encrypts, under this same list of participants, the respective amounts by which she intends to alter each account's balance (0 for everyone except for -10 at her own index and 10 at Bob's, for example). The ZSC applies these differentials using the homomorphic property of ElGamal encryption. Alice finally publishes a zero-knowlegde proof that she knows her own secret key, that she only deducted funds from herself, that she owns enough to cover the deduction, and that she only credited funds to one person (and by the same amount she debited, no less); she of course also shows that all accounts other than hers and Bob's were not altered. This process is streamlined using our front-end client, and need _not_ be done directly by the user.
+To enhance their privacy, users should conduct as much business as possible within the ZSC.
 
-To any outside observer, it will be impossible to discern which _differential_ ciphertexts encrypted nonzero amounts, and what these amounts were; as such, it will be impossible to determine who sent funds to whom and how much.
+We briefly describe the operation of the (anonymous) Zether Smart Contract, following the [original Zether paper](https://crypto.stanford.edu/~buenz/papers/zether.pdf). Each account consists of an ElGamal ciphertext, which encrypts the account's balance under its own public key. To send funds, Alice publishes an ordered list of public keys—which contains herself and the recipient, among other arbitrarily chosen parties—together with a corresponding list of ElGamal ciphertexts, which respectively encrypt (under the appropriate public keys) the amounts by which Alice intends to alter these various accounts' balances. The ZSC applies these "adjustments" using the homomomorphic property of ElGamal encryption (with "message in the exponent"). Alice finally publishes a zero-knowlegde proof which asserts that she knows her own secret key, that she owns enough to cover the deduction, that she deducted funds only from herself, and credited them only to Bob (and by the same amount she debited, no less); she of course also demonstrates that she did not alter those balances other than her own and Bob's. These adjustment ciphertexts—opaque to any outside observer—conceal who sent funds to whom, and how much was sent.
+
+Users need _never_ interact directly with the ZSC; rather, our front-end client streamlines its use.
 
 Our theoretical contribution is a zero-knowledge proof protocol for the anonymous transfer statement (8) of [Bünz, et. al.](https://crypto.stanford.edu/~buenz/papers/zether.pdf), which moreover has appealing asymptotic performance characteristics; details on our techniques can be found in the [technical report](docs/AnonZether.pdf). We also of course provide this implementation.
 
@@ -25,14 +27,14 @@ Anonymous Zether is not yet feasible for use in the Ethereum mainnet (see the [t
 To deploy the ZSC (Zether Smart Contract) to a running Quorum cluster and make some anonymous transfers...
 
 ### Install prerequisites
-* [Yarn](https://yarnpkg.com/en/docs/install#mac-stable) tested with version 0.1.0
-* [Node.js](https://nodejs.org/en/download/) tested with version v12.1.0
+* [Yarn](https://yarnpkg.com/en/docs/install#mac-stable) tested with version 1.17.3
+* [Node.js](https://nodejs.org/en/download/) tested with version v12.9.1
 
 ### Setting things up
 
 * Spin up a Quorum cluster (e.g., follow the steps of [the 7nodes example](https://github.com/jpmorganchase/quorum-examples/tree/master/examples/7nodes)).
-    * For the Node.js example in this project to work, WebSockets need to be enabled when starting up geth / Quorum (i.e., use the flags `--ws`, `--wsport 23000`, `--ws --wsorigins=*` on your first `geth` node).
-    * The code as currently written only supports Raft. The reason is that Raft reports `block.time` in nanoseconds (as opposed to milliseconds), so we had to add extra divisions by 1,000,000 [here](packages/protocol/contracts/ZSC.sol#L66) and [here](packages/anonymous.js/src/client.js#L37). To use IBFT, simply remove these two divisions and recompile the contracts (by running `truffle build` in [packages/protocol](packages/protocol) and copying all resulting `.json` artifacts into [packages/contract-artifacts/artifacts](packages/contract-artifacts/artifacts)). You _may_, due to slower block time, also have to adjust the `estimate` function [here](packages/anonymous.js/src/client.js#L177-L183).
+    * For the Node.js example in this project to work, WebSockets need to be enabled when starting up geth / Quorum (i.e., use the flags `--ws`, `--wsport 23000`, `--wsorigins=*` on your first `geth` node).
+    * The code as currently written only supports IBFT consensus (with `--istanbul.blockperiod 1`!). The reason is because Raft reports block time differently (in nanoseconds, as opposed to milliseconnds), an idiosyncracy which interferes with epoch measurements. We don't plan on maintaining support for Raft at this time.
 * In the main `anonymous-zether` directory, type `yarn`.
 
 ### Run the Node.js demo
@@ -77,7 +79,7 @@ Deposit of 100 was successful. Balance now 100.
 ```
 If this doesn't work, make sure that your deployments, as well as your minting and approval operations, went through properly.
 
-Now, make sure that the Java prover is running in the background, and then type
+Now, type:
 ```javascript
 > alice.withdraw(10)
 Initiating withdrawal.
@@ -121,7 +123,7 @@ Transfer of 10 was successful. Balance now 10.
 
 The meaning of this syntax is that Carol and Dave are being included, along with Bob and Alice, in Bob's transaction's _anonymity set_. As a consequence, _no outside observer_ will be able to distinguish, among the four participants, who sent funds, who received funds, and how much was transferred. The account balances of all four participants are also private.
 
-In fact, you can see for yourself the perspective of Eve---an eavesdropper, let's say. In a new window (if you want), execute:
+In fact, you can see for yourself the perspective of Eve—an eavesdropper, let's say. In a new window (if you want), execute:
 
 ```javascript
 > var inputs = deployedZSC.jsonInterface.abi.methods.transfer.abiItem.inputs
