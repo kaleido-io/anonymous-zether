@@ -18,12 +18,16 @@ class SigmaProof {
 
 class SigmaProver {
     constructor() {
+        var params = new GeneratorParams();
+
         this.generateProof = (statement, witness, salt) => {
             var y = statement['y'][0].getVector()[0];
             var yBar = statement['y'][1].getVector()[0];
             var z = statement['z'];
-            var zSquared = z.redMul(z);
-            var zCubed = z.redMul(zSquared);
+            var zs = [z.redPow(new BN(2))];
+            for (var i = 1; i < 3; i++) {
+                zs.push(zs[i - 1].redMul(z));
+            }
 
             var kR = bn128.randomScalar();
             var kX = bn128.randomScalar();
@@ -33,7 +37,7 @@ class SigmaProver {
             var AL = statement['y'].map((y_i) => new GeneratorVector(y_i.times(kR).getVector().slice(1)));
             var Au = utils.gEpoch(statement['epoch']).mul(kX);
             var ADiff = y.add(yBar).mul(kR);
-            var At = statement['CRn'].mul(zCubed).add(statement['inOutR'].mul(zSquared).neg()).mul(kX);
+            var At = statement['D'].mul(zs[0].neg()).add(statement['CRn'].mul(zs[1])).add(statement['XR'].mul(zs[2])).mul(kX);
 
             var proof = new SigmaProof();
 
@@ -44,7 +48,8 @@ class SigmaProver {
                 'bytes32[2]',
                 'bytes32[2]',
                 'bytes32[2]',
-                'bytes32[2]'
+                'bytes32[2]',
+                'bytes32[2][2][]',
             ], [
                 bn128.bytes(salt),
                 AL[0].getVector().map((point, i) => [point, AL[1].getVector()[i]].map(bn128.serialize)), // unusual---have to transpose
@@ -52,7 +57,8 @@ class SigmaProver {
                 bn128.serialize(AD),
                 bn128.serialize(Au),
                 bn128.serialize(ADiff),
-                bn128.serialize(At)
+                bn128.serialize(At),
+                AL[0].getVector().map((point, i) => [point, AL[1].getVector()[i]].map(bn128.serialize)), // unusual---have to transpose
             ]));
 
             proof.sX = kX.redAdd(proof.challenge.redMul(witness['x']));

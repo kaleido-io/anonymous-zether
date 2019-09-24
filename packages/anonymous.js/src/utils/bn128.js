@@ -20,8 +20,8 @@ bn128.curve = new EC.curve.short({
 
 bn128.zero = bn128.curve.g.mul(0);
 
-bn128.p = BN.red(bn128.curve.p);
-bn128.q = BN.red(bn128.curve.n);
+bn128.p = BN.red(new BN(bn128.curve.p.toString(16), 16)); // temporary workaround due to
+bn128.q = BN.red(new BN(bn128.curve.n.toString(16), 16)); // https://github.com/indutny/elliptic/issues/191
 
 // Get a random BN in the bn128 curve group's reduction context
 bn128.randomScalar = () => {
@@ -33,6 +33,8 @@ bn128.bytes = (i) => { // i is a BN (red)
 };
 
 bn128.serialize = (point) => {
+    if (point.x == null && point.y == null)
+        return ["0x0000000000000000000000000000000000000000000000000000000000000000", "0x0000000000000000000000000000000000000000000000000000000000000000"];
     return [bn128.bytes(point.getX()), bn128.bytes(point.getY())];
 };
 

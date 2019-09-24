@@ -14,6 +14,8 @@ class ZetherProof {
             var result = "0x";
             result += bn128.representation(this.a).slice(2);
             result += bn128.representation(this.s).slice(2);
+            result += bn128.representation(this.XL).slice(2);
+            result += bn128.representation(this.XR).slice(2);
             this.tCommits.getVector().forEach((commit) => {
                 result += bn128.representation(commit).slice(2);
             });
@@ -40,6 +42,14 @@ class ZetherProver {
         this.generateProof = (statement, witness, salt) => { // salt probably won't be used
             var proof = new ZetherProof();
 
+            var statementHash = utils.hash(abiCoder.encodeParameters(['bytes32[2][]', 'bytes32[2][]', 'bytes32[2][]', 'bytes32[2]', 'bytes32[2][]', 'uint256'], [statement['CLn'], statement['CRn'], statement['L'], statement['R'], statement['y'], statement['epoch']]));
+            statement['CLn'] = new GeneratorVector(statement['CLn'].map(bn128.unserialize));
+            statement['CRn'] = new GeneratorVector(statement['CRn'].map(bn128.unserialize));
+            statement['L'] = new GeneratorVector(statement['L'].map(bn128.unserialize));
+            statement['R'] = bn128.unserialize(statement['R']);
+            statement['y'] = new GeneratorVector(statement['y'].map(bn128.unserialize));
+            // go ahead and "liven" these once and for all now that they have been hashed
+
             var number = new BN(witness['bTransfer']).add(new BN(witness['bDiff']).shln(32));
             var aL = new FieldVector(number.toString(2, 64).split("").reverse().map((i) => new BN(i, 2).toRed(bn128.q)));
             var aR = aL.plus(new BN(1).toRed(bn128.q).redNeg());
@@ -51,23 +61,21 @@ class ZetherProver {
             var rho = bn128.randomScalar(); // already reduced
             proof.s = params.commit(sL, sR, rho);
 
-            var statementHash = utils.hash(AbiCoder.encodeParameters(['uint256', 'bytes32[2]', 'bytes32[2][]', 'bytes32[2][]', 'bytes32[2][]', 'bytes32[2][]'], [statement['epoch'], statement['R'], statement['CLn'], statement['CRn'], statement['L'], statement['y']]));
-            statement['CLn'] = new GeneratorVector(statement['CLn'].map((point) => bn128.unserialize(point)));
-            statement['CRn'] = new GeneratorVector(statement['CRn'].map((point) => bn128.unserialize(point)));
-            statement['L'] = new GeneratorVector(statement['L'].map((point) => bn128.unserialize(point)));
-            statement['R'] = bn128.unserialize(statement['R']);
-            statement['y'] = new GeneratorVector(statement['y'].map((point) => bn128.unserialize(point)));
-            // go ahead and "liven" these once and for all now that they have been hashed
+            var gamma = bn128.randomScalar();
+            var blinding = bn128.randomScalar();
+            proof.XL = params.getH().mul(gamma).add(statement['y'].getVector()[witness['index'][0]].mul(blinding));
+            proof.XR = params.getG().mul(blinding); // (XL, XR) is an ElGamal encryption of h^gamma under y...
 
-            var y = utils.hash(AbiCoder.encodeParameters(['bytes32', 'bytes32[2]', 'bytes32[2]'], [bn128.bytes(statementHash), bn128.serialize(proof.a), bn128.serialize(proof.s)]));
             var ys = [new BN(1).toRed(bn128.q)];
             for (var i = 1; i < 64; i++) { // it would be nice to have a nifty functional way of doing this.
                 ys.push(ys[i - 1].redMul(y));
             }
             ys = new FieldVector(ys); // could avoid this line by starting ys as a fieldvector and using "plus". not going to bother.
             var z = utils.hash(bn128.bytes(y));
-            var zs = [z.redPow(new BN(2)), z.redPow(new BN(3))];
-            var twos = [new BN(1).toRed(bn128.q)];
+            var zs = [z.redPow(new BN(2))];
+            for (var i = 1; i < 3; i++) {
+                zs.push(zs[i - 1].redMul(z));
+            }            var twos = [new BN(1).toRed(bn128.q)];
             for (var i = 1; i < 32; i++) {
                 twos.push(twos[i - 1].redMul(new BN(2).toRed(bn128.q)));
             }
@@ -85,7 +93,7 @@ class ZetherProver {
             var r1 = sR.hadamard(ys);
             var rPoly = new FieldVectorPolynomial(r0, r1);
             var tPolyCoefficients = lPoly.innerProduct(rPoly); // just an array of BN Reds... should be length 3
-            var polyCommitment = new PolyCommitment(params, tPolyCoefficients);
+            var polyCommitment = new PolyCommitment(params, tPolyCoefficients, zs[2].redMul(gamma));
             var x = utils.hash(AbiCoder.encodeParameters(['bytes32', 'bytes32[2]', 'bytes32[2]'], [bn128.bytes(z), ...polyCommitment.getCommitments().map(bn128.serialize)]));
             var evalCommit = polyCommitment.evaluate(x);
             proof.tCommits = new GeneratorVector(polyCommitment.getCommitments()); // just 2 of them?
@@ -103,13 +111,16 @@ class ZetherProver {
             var sigmaOverX = anonWitness['sigma'].redMul(xInv);
 
             var sigmaStatement = {}; // only certain parts of the "statement" are actually used in proving.
-            sigmaStatement['inOutR'] = statement['R'].add(params.getG().mul(rhoOverX).neg());
+            sigmaStatement['D'] = statement['R'].add(params.getG().mul(rhoOverX).neg());
             sigmaStatement['CRn'] = statement['CRn'].getVector()[witness['index'][0]].add(params.getG().mul(piOverX).neg());
             sigmaStatement['y'] = Array.from({ length: 2 }).map((_, i) => statement['y'].shift(witness['index'][i]).extract(0).times(new BN(1).toRed(bn128.q).redSub(sigmaOverX)));
             sigmaStatement['z'] = z;
             sigmaStatement['gPrime'] = params.getG().mul(new BN(1).toRed(bn128.q).redSub(sigmaOverX));
             sigmaStatement['epoch'] = statement['epoch'];
-            var sigmaWitness = { 'x': witness['x'], 'r': witness['r'].redSub(rhoOverX).redMul(new BN(1).toRed(bn128.q).redSub(sigmaOverX).redInvm()) };
+            sigmaStatement['XR'] = proof.XR;
+            var sigmaWitness = {};
+            sigmaWitness['x'] = witness['x'];
+            sigmaWitness['r'] = witness['r'].redSub(rhoOverX).redMul(new BN(1).toRed(bn128.q).redSub(sigmaOverX).redInvm());
             proof.sigmaProof = sigmaProver.generateProof(sigmaStatement, sigmaWitness, challenge);
 
             var uChallenge = utils.hash(AbiCoder.encodeParameters(['bytes32', 'bytes32', 'bytes32', 'bytes32'], [bn128.bytes(proof.sigmaProof.challenge), bn128.bytes(proof.t), bn128.bytes(proof.tauX), bn128.bytes(proof.mu)]));

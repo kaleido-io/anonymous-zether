@@ -18,18 +18,20 @@ class SigmaProof {
 
 class SigmaProver {
     constructor() {
-        var g = utils.mapInto(soliditySha3("G")); // my version of "params". works, i guess.
+        var params = new GeneratorParams();
 
         this.generateProof = (statement, witness, salt) => {
-            var y = statement['y'];
             var z = statement['z'];
-            var zSquared = z.redMul(statement['z']);
+            var zs = [z.redPow(new BN(2))];
+            for (var i = 1; i < 2; i++) {
+                zs.push(zs[i - 1].redMul(z));
+            }
 
             var kX = bn128.randomScalar();
 
-            var Ay = g.mul(kX);
+            var Ay = params.getG().mul(kX);
             var Au = utils.gEpoch(statement['epoch']).mul(kX);
-            var At = statement['CRn'].mul(zSquared).mul(kX);
+            var At = statement['CRn'].mul(zs[0]).add(statement['XR'].mul(zs[1])).mul(kX);
 
             var proof = new SigmaProof();
 
@@ -37,12 +39,14 @@ class SigmaProver {
                 'bytes32',
                 'bytes32[2]',
                 'bytes32[2]',
-                'bytes32[2]'
+                'bytes32[2]',
+                'address',
             ], [
                 bn128.bytes(salt),
                 bn128.serialize(Ay),
                 bn128.serialize(Au),
-                bn128.serialize(At)
+                bn128.serialize(At),
+                statement.sender,
             ]));
 
             proof.sX = kX.redAdd(proof['challenge'].redMul(witness['x']));

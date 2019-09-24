@@ -35,13 +35,13 @@ class GeneratorParams {
 
         this.commit = (gExp, hExp, blinding) => {
             var result = h.mul(blinding);
-            var gExpVector = gExp.getVector();
-            var hExpVector = hExp.getVector();
-            gs.getVector().forEach((g, i) => {
-                result = result.add(g.mul(gExpVector[i]));
+            var gsVector = gs.getVector();
+            var hsVector = hs.getVector();
+            gExp.getVector().forEach((gExp, i) => {
+                result = result.add(gsVector[i].mul(gExp));
             });
-            hs.getVector().forEach((h, i) => { // swap the order and enclose this in an if (hExp) if block if you want it optional.
-                result = result.add(h.mul(hExpVector[i]));
+            hExp.getVector().forEach((hExp, i) => { // swap the order and enclose this in an if (hExp) if block if you want it optional.
+                result = result.add(hsVector[i].mul(hExp));
             });
             return result;
         };
@@ -249,8 +249,8 @@ class PedersenCommitment {
 }
 
 class PolyCommitment {
-    constructor(params, coefficients) {
-        var coefficientCommitments = [new PedersenCommitment(params, coefficients[0], new BN(0).toRed(bn128.q))];
+    constructor(params, coefficients, randomness) {
+        var coefficientCommitments = [new PedersenCommitment(params, coefficients[0], randomness)];
         coefficients.slice(1).forEach((coefficient) => {
             coefficientCommitments.push(new PedersenCommitment(params, coefficient, bn128.randomScalar()));
         });
