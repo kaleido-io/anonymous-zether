@@ -39,7 +39,7 @@ class BurnProver {
         this.generateProof = (statement, witness, salt) => { // salt probably won't be used
             var proof = new BurnProof();
 
-            var statementHash = utils.hash(abiCoder.encodeParameters(['bytes32[2]', 'bytes32[2]', 'bytes32[2]', 'uint256', 'uint256'], [statement['CLn'], statement['CRn'], statement['y'], statement['bTransfer'], statement['epoch']]));
+            var statementHash = utils.hash(AbiCoder.encodeParameters(['bytes32[2]', 'bytes32[2]', 'bytes32[2]', 'uint256', 'uint256'], [statement['CLn'], statement['CRn'], statement['y'], statement['bTransfer'], statement['epoch']]));
             statement['CLn'] = bn128.unserialize(statement['CLn']);
             statement['CRn'] = bn128.unserialize(statement['CRn']);
             statement['y'] = bn128.unserialize(statement['y']);
@@ -60,7 +60,7 @@ class BurnProver {
             proof.XL = params.getH().mul(gamma).add(statement['y'].mul(blinding));
             proof.XR = params.getG().mul(blinding); // (XL, XR) is an ElGamal encryption of h^gamma under y...
 
-            var y = utils.hash(abiCoder.encodeParameters(['bytes32', 'bytes32[2]', 'bytes32[2]', 'bytes32[2]', 'bytes32[2]'], [bn128.bytes(statementHash), bn128.serialize(proof.a), bn128.serialize(proof.s), bn128.serialize(proof.XL), bn128.serialize(proof.XR)]));
+            var y = utils.hash(AbiCoder.encodeParameters(['bytes32', 'bytes32[2]', 'bytes32[2]', 'bytes32[2]', 'bytes32[2]'], [bn128.bytes(statementHash), bn128.serialize(proof.a), bn128.serialize(proof.s), bn128.serialize(proof.XL), bn128.serialize(proof.XR)]));
 
             var ys = [new BN(1).toRed(bn128.q)];
             for (var i = 1; i < 32; i++) { // it would be nice to have a nifty functional way of doing this.

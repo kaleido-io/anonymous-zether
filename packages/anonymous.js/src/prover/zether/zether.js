@@ -42,7 +42,7 @@ class ZetherProver {
         this.generateProof = (statement, witness, salt) => { // salt probably won't be used
             var proof = new ZetherProof();
 
-            var statementHash = utils.hash(abiCoder.encodeParameters(['bytes32[2][]', 'bytes32[2][]', 'bytes32[2][]', 'bytes32[2]', 'bytes32[2][]', 'uint256'], [statement['CLn'], statement['CRn'], statement['L'], statement['R'], statement['y'], statement['epoch']]));
+            var statementHash = utils.hash(AbiCoder.encodeParameters(['bytes32[2][]', 'bytes32[2][]', 'bytes32[2][]', 'bytes32[2]', 'bytes32[2][]', 'uint256'], [statement['CLn'], statement['CRn'], statement['L'], statement['R'], statement['y'], statement['epoch']]));
             statement['CLn'] = new GeneratorVector(statement['CLn'].map(bn128.unserialize));
             statement['CRn'] = new GeneratorVector(statement['CRn'].map(bn128.unserialize));
             statement['L'] = new GeneratorVector(statement['L'].map(bn128.unserialize));
@@ -65,6 +65,8 @@ class ZetherProver {
             var blinding = bn128.randomScalar();
             proof.XL = params.getH().mul(gamma).add(statement['y'].getVector()[witness['index'][0]].mul(blinding));
             proof.XR = params.getG().mul(blinding); // (XL, XR) is an ElGamal encryption of h^gamma under y...
+
+            var y = utils.hash(AbiCoder.encodeParameters(['bytes32', 'bytes32[2]', 'bytes32[2]', 'bytes32[2]', 'bytes32[2]'], [bn128.bytes(statementHash), bn128.serialize(proof.a), bn128.serialize(proof.s), bn128.serialize(proof.XL), bn128.serialize(proof.XR)]));
 
             var ys = [new BN(1).toRed(bn128.q)];
             for (var i = 1; i < 64; i++) { // it would be nice to have a nifty functional way of doing this.

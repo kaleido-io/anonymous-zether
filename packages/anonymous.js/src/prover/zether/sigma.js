@@ -1,5 +1,5 @@
 const AbiCoder = require('web3-eth-abi');
-
+const BN = require('bn.js');
 const { GeneratorParams, GeneratorVector, FieldVector } = require('../algebra.js');
 const bn128 = require('../../utils/bn128.js');
 const utils = require('../../utils/utils.js');
@@ -43,7 +43,6 @@ class SigmaProver {
 
             proof.challenge = utils.hash(AbiCoder.encodeParameters([
                 'bytes32',
-                'bytes32[2][2][]',
                 'bytes32[2]',
                 'bytes32[2]',
                 'bytes32[2]',
@@ -52,7 +51,6 @@ class SigmaProver {
                 'bytes32[2][2][]',
             ], [
                 bn128.bytes(salt),
-                AL[0].getVector().map((point, i) => [point, AL[1].getVector()[i]].map(bn128.serialize)), // unusual---have to transpose
                 bn128.serialize(Ay),
                 bn128.serialize(AD),
                 bn128.serialize(Au),

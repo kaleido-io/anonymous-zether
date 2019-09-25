@@ -182,8 +182,8 @@ contract ZetherVerifier {
         }
         // zetherAuxiliaries.twoTimesZSquared = times(twos, zetherAuxiliaries.zSquared);
         for (uint256 i = 0; i < m / 2; i++) {
-            zetherAuxiliaries.twoTimesZSquared[i] = zetherAuxiliaries.zSquared.mul(2 ** i);
-            zetherAuxiliaries.twoTimesZSquared[i + m / 2] = zetherAuxiliaries.zCubed.mul(2 ** i);
+            zetherAuxiliaries.twoTimesZSquared[i] = zetherAuxiliaries.zs[0].mul(2 ** i);
+            zetherAuxiliaries.twoTimesZSquared[i + m / 2] = zetherAuxiliaries.zs[1].mul(2 ** i);
         }
         zetherAuxiliaries.x = uint256(keccak256(abi.encode(zetherAuxiliaries.z, proof.commits))).mod();
 
@@ -257,12 +257,9 @@ contract ZetherVerifier {
         for (uint256 i = 0; i < proof.size; i++) {
             anonAuxiliaries.balanceCommitNewL2 = add(anonAuxiliaries.balanceCommitNewL2, mul(statement.CLn[i], anonAuxiliaries.f[i][0]));
             anonAuxiliaries.balanceCommitNewR2 = add(anonAuxiliaries.balanceCommitNewR2, mul(statement.CRn[i], anonAuxiliaries.f[i][0]));
-            anonAuxiliaries.parity = add(anonAuxiliaries.parity, mul(statement.y[i], anonAuxiliaries.cycler[i % 2][0])); // Hadamard already baked in...
         }
         anonAuxiliaries.balanceCommitNewL2 = mul(add(anonAuxiliaries.balanceCommitNewL2, neg(anonProof.balanceCommitNewLG)), anonAuxiliaries.xInv);
         anonAuxiliaries.balanceCommitNewR2 = mul(add(anonAuxiliaries.balanceCommitNewR2, neg(anonProof.balanceCommitNewRG)), anonAuxiliaries.xInv);
-
-        require(eq(anonAuxiliaries.parity, add(mul(anonProof.parityG1, anonAuxiliaries.x), anonProof.parityG0)), "Index opposite parity check fail.");
 
         anonAuxiliaries.gPrime = mul(add(mul(g, anonAuxiliaries.x), neg(anonProof.gG)), anonAuxiliaries.xInv);
 
@@ -483,7 +480,7 @@ contract ZetherVerifier {
         anonProof.zA = slice(arr, 1984 + size * 192);
         anonProof.zC = slice(arr, 2016 + size * 192);
         anonProof.zE = slice(arr, 2048 + size * 192);
-        
+
         proof.anonProof = anonProof;
         return proof;
     }

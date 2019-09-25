@@ -86,7 +86,7 @@ class AnonProver {
             proof.LG = a.map((a_i, i) => convolver.convolution(a_i, statement['L']).add(statement['y'].shift(witness['index'][i]).extract(0).times(witness['rho'])));
             proof.yG = a.map((a_i, i) => convolver.convolution(a_i, statement['y']).add(statement['y'].shift(witness['index'][i]).extract(0).times(witness['sigma'])));
 
-            var cycler = a.map((a_i) => new FieldVector([].concat.apply([], Array(size / 2).fill(Array.from({ length: 2 }).map((_, j) => a_i.extract(j).sum()))))); // test this
+            var cycler = a.map((a_i) => new FieldVector(Array.from({ length: 2 }).map((_, j) => a_i.extract(j).sum()))); // test this
             proof.E = params.commit(cycler[0].hadamard(cycler[1]).extract(0), cycler[0].hadamard(cycler[1]).extract(1), rE);
             proof.F = params.commit(cycler[witness['index'][1] % 2].extract(0), cycler[witness['index'][0] % 2].extract(1), rF); // check this
 
@@ -124,7 +124,7 @@ class AnonProver {
             proof.zA = rB.redMul(proof.challenge).redAdd(rA);
             proof.zC = rC.redMul(proof.challenge).redAdd(rD);
             proof.zE = rF.redMul(proof.challenge).redAdd(rE);
-            
+
             return proof;
         };
     }
