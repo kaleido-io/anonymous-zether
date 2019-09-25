@@ -16,7 +16,7 @@ contract ZSC {
     mapping(bytes32 => bytes32[2][2]) pTransfers; // storage for pending transfers
     mapping(bytes32 => uint256) lastRollOver;
     bytes32[] nonceSet; // would be more natural to use a mapping, but they can't be deleted / reset!
-    uint256 public lastGlobalUpdate = 0; // will be also used as a proxy for "current epoch", seeing as rollovers will be anticipated
+    uint256 lastGlobalUpdate = 0; // will be also used as a proxy for "current epoch", seeing as rollovers will be anticipated
     // not implementing account locking for now...revisit
 
     event TransferOccurred(bytes32[2][] parties); // all parties will be notified, client can determine whether it was real or not.
