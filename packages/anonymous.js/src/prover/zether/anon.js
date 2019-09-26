@@ -19,8 +19,8 @@ class AnonProof {
             result += bn128.representation(this.gG).slice(2);
             result += bn128.representation(this.CLnG).slice(2);
             result += bn128.representation(this.CRnG).slice(2);
-            result += bn128.representation(this.parityG0).slice(2);
-            result += bn128.representation(this.parityG1).slice(2);
+            result += bn128.representation(this.E).slice(2);
+            result += bn128.representation(this.F).slice(2);
             this.f.forEach((f_i) => {
                 f_i.getVector().forEach((f_ij) => {
                     result += bn128.bytes(f_ij).slice(2);
@@ -38,7 +38,8 @@ class AnonProof {
             });
             result += bn128.bytes(this.zA).slice(2);
             result += bn128.bytes(this.zC).slice(2);
-
+            result += bn128.bytes(this.zE).slice(2);
+            
             return result;
         };
     }
@@ -58,6 +59,8 @@ class AnonProver {
             var rB = bn128.randomScalar();
             var rC = bn128.randomScalar();
             var rD = bn128.randomScalar();
+            var rE = bn128.randomScalar();
+            var rF = bn128.randomScalar();
 
             var a = Array.from({ length: 2 }).map(() => Array.from({ length: size - 1 }).map(bn128.randomScalar));
             a = a.map((a_i) => {
@@ -83,9 +86,9 @@ class AnonProver {
             proof.LG = a.map((a_i, i) => convolver.convolution(a_i, statement['L']).add(statement['y'].shift(witness['index'][i]).extract(0).times(witness['rho'])));
             proof.yG = a.map((a_i, i) => convolver.convolution(a_i, statement['y']).add(statement['y'].shift(witness['index'][i]).extract(0).times(witness['sigma'])));
 
-            var cycler = a.map((a_i) => new FieldVector([].concat.apply([], Array(size / 2).fill(Array.from({ length: 2 }).map((_, j) => a_i.extract(j).sum()))))); // test this
-            proof.parityG0 = statement['y'].commit(cycler[0].hadamard(cycler[1]));
-            proof.parityG1 = statement['y'].commit(new FieldVector(Array.from({ length: size }).map((_, j) => cycler[(j + witness['index'][1]) % 2].getVector()[j])));
+            var cycler = a.map((a_i) => new FieldVector(Array.from({ length: 2 }).map((_, j) => a_i.extract(j).sum()))); // test this
+            proof.E = params.commit(cycler[0].hadamard(cycler[1]).extract(0), cycler[0].hadamard(cycler[1]).extract(1), rE);
+            proof.F = params.commit(cycler[witness['index'][1] % 2].extract(0), cycler[witness['index'][0] % 2].extract(1), rF); // check this
 
             proof.challenge = utils.hash(AbiCoder.encodeParameters([ // diverting with practice to just include this in the proof, but...
                 'bytes32',
@@ -113,13 +116,14 @@ class AnonProver {
                 bn128.serialize(proof.gG),
                 bn128.serialize(proof.CLnG),
                 bn128.serialize(proof.CRnG),
-                bn128.serialize(proof.parityG0),
-                bn128.serialize(proof.parityG1)
+                bn128.serialize(proof.E),
+                bn128.serialize(proof.F)
             ]));
 
             proof.f = a.map((a_i, i) => new FieldVector(a_i.add(b[i].times(proof['challenge'])).getVector().slice(1)));
             proof.zA = rB.redMul(proof.challenge).redAdd(rA);
             proof.zC = rC.redMul(proof.challenge).redAdd(rD);
+            proof.zE = rF.redMul(proof.challenge).redAdd(rE);
 
             return proof;
         };
