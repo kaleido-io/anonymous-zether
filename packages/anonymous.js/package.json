@@ -6,8 +6,8 @@
   "dependencies": {
     "bn.js": "^5.x",
     "elliptic": "^6.5.1",
-    "@photic/web3": "1.0.x",
-    "web3-utils": "1.0.0-beta.37"
+    "@photic/web3": "^1.0.12",
+    "web3-utils": "1.2.8"
   },
   "devDependencies": {
     "chai": "^4.2.0",
