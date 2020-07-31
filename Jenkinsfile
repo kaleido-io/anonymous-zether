@@ -50,7 +50,7 @@ node {
                     baseImage.inside("--volume=${pwd}/packages/anonymous.js:/usr/local/src") {
                         // Set the local package.json to the latest remote version, then patch
                         def npmVersion = "npm version --no-git-tag-version --allow-same-version"
-                        sh "$npmVersion \$(npm show $npmPackage version --tag beta) && $npmVersion -i prerelease --preid beta && npm publish --tag beta"
+                        sh "cd /usr/local/src && $npmVersion \$(npm show $npmPackage version --tag beta) && $npmVersion -i prerelease --preid beta && npm publish --tag beta"
                     }
                 }
             }
