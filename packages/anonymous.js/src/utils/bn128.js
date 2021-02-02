@@ -28,6 +28,10 @@ bn128.randomScalar = () => {
     return new BN(crypto.randomBytes(32), 16).toRed(bn128.q);
 };
 
+bn128.scalarFromSeed = (seed) => {
+    return new BN(seed, 16).toRed(bn128.q);
+}
+
 bn128.bytes = (i) => { // i is a BN (red)
     return "0x" + i.toString(16, 64);
 };

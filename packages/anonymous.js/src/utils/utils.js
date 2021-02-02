@@ -25,6 +25,12 @@ utils.readBalance = (CL, CR, x) => {
     }
 };
 
+utils.createAccountFromSeed = (seed) => {
+    var x = bn128.scalarFromSeed(seed);
+    var y = utils.determinePublicKey(x);
+    return { 'x': x, 'y': y };
+}
+
 utils.createAccount = () => {
     var x = bn128.randomScalar();
     var y = utils.determinePublicKey(x);
