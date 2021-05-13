@@ -6,14 +6,15 @@
   "dependencies": {
     "bn.js": "^5.x",
     "elliptic": "^6.5.1",
-    "@photic/web3": "^1.0.12",
-    "web3-utils": "1.2.8"
+    "@photic/web3": "^1.3.x",
+    "@photic/web3-utils": "1.3.7",
+    "@photic/web3-eth-abi": "1.3.7"
   },
   "devDependencies": {
     "chai": "^4.2.0",
     "chai-as-promised": "^7.1.1",
     "eslint": "^5.16.0",
-    "sinon": "^7.4.1",
-    "sinon-chai": "^3.3.0"
+    "sinon": "^10.0.0",
+    "sinon-chai": "^3.6.0"
   }
 }

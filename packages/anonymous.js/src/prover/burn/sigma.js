@@ -1,4 +1,4 @@
-const AbiCoder = require('web3-eth-abi');
+const AbiCoder = require('@photic/web3-eth-abi');
 const { soliditySha3 } = require('web3-utils');
 const BN = require('bn.js');
 const { GeneratorParams, FieldVector } = require('../algebra.js');
