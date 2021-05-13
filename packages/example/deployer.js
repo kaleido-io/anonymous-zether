@@ -1,4 +1,4 @@
-const Web3 = require("web3");
+const Web3 = require("@photic/web3");
 const ZetherVerifier = require("../contract-artifacts/artifacts/ZetherVerifier.json");
 const BurnVerifier = require("../contract-artifacts/artifacts/BurnVerifier.json");
 const CashToken = require("../contract-artifacts/artifacts/CashToken.json");
