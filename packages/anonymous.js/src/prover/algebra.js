@@ -1,7 +1,7 @@
 const bn128 = require('../utils/bn128.js');
 const utils = require('../utils/utils.js');
 const BN = require('bn.js');
-const { soliditySha3 } = require('web3-utils');
+const { soliditySha3 } = require('@photic/web3-utils');
 
 class GeneratorParams {
     constructor(gs, hs, h) { // doing double duty also as a "VectorBase". comes empty

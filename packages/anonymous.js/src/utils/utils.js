@@ -1,6 +1,6 @@
 const bn128 = require('./bn128.js')
 const BN = require('bn.js')
-const { soliditySha3 } = require('web3-utils');
+const { soliditySha3 } = require('@photic/web3-utils');
 
 const utils = {};
 
